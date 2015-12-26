@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Photocabulary</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_vocabulary_list">VocabularyListActivity</string>
+    <string name="empty_vocab_set_help">Click here or the menu button to add new vocabulary set</string>
+    <string name="title_activity_edit">EditActivity</string>
+    <string name="menu_add_vocab_set">Add Vocab Set</string>
+</resources>
