@@ -2,16 +2,22 @@ package com.google.eldeveloper13.photocabulary;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.database.Cursor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
 import com.google.eldeveloper13.photocabulary.dialogs.DialogHelper;
+import com.google.eldeveloper13.photocabulary.factory.DatabaseFactory;
+import com.google.eldeveloper13.photocabulary.models.VocabSet;
+import com.google.eldeveloper13.photocabulary.services.DatabaseInterface;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -21,12 +27,26 @@ public class MainActivity extends AppCompatActivity {
 
     @Bind(android.R.id.list)
     ListView mListView;
+    @Bind(android.R.id.empty)
+    View mEmptyView;
+
+    DatabaseInterface mDatabaseInterface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        mDatabaseInterface = DatabaseFactory.makeDatabase(this);
+        Cursor cursor = mDatabaseInterface.getVocabSetCursor();
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.vocab_set_row, cursor, new String[] {VocabSet.COLUMN_TITLE}, new int[] { R.id.vocab_set_title }, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        mListView.setAdapter(adapter);
+        if (mListView.getCount() > 0) {
+            mEmptyView.setVisibility(View.GONE);
+        } else {
+            mEmptyView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -71,7 +91,10 @@ public class MainActivity extends AppCompatActivity {
         if (title == null || title.trim().isEmpty()) {
             Toast.makeText(this, "Vocabulary set title cannot be empty", Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Creating Vocab set " + title, Toast.LENGTH_SHORT).show();
+
+            Long result = mDatabaseInterface.addVocabSet(title);
+            ((SimpleCursorAdapter) mListView.getAdapter()).getCursor().requery();
+//            Toast.makeText(this, "Creating Vocab set " + title + " with result " + result, Toast.LENGTH_SHORT).show();
         }
     }
 }
