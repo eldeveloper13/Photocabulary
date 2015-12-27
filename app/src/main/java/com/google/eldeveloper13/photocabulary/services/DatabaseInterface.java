@@ -8,4 +8,5 @@ public interface DatabaseInterface {
 
     long addVocabSet(String title);
 
+    int deleteVocabSet(String title);
 }

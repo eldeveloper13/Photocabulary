@@ -3,11 +3,15 @@ package com.google.eldeveloper13.photocabulary;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
+import android.database.sqlite.SQLiteCursor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -25,6 +29,9 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int MENU_RENAME_INDEX = 0;
+    private static final int MENU_DELETE_INDEX = 1;
+
     @Bind(android.R.id.list)
     ListView mListView;
     @Bind(android.R.id.empty)
@@ -38,15 +45,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         mDatabaseInterface = DatabaseFactory.makeDatabase(this);
-        Cursor cursor = mDatabaseInterface.getVocabSetCursor();
+        setupListView();
+    }
 
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.vocab_set_row, cursor, new String[] {VocabSet.COLUMN_TITLE}, new int[] { R.id.vocab_set_title }, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+    private void setupListView() {
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.vocab_set_row, mDatabaseInterface.getVocabSetCursor(), new String[] {VocabSet.COLUMN_TITLE}, new int[] { R.id.vocab_set_title }, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mListView.setAdapter(adapter);
-        if (mListView.getCount() > 0) {
-            mEmptyView.setVisibility(View.GONE);
-        } else {
-            mEmptyView.setVisibility(View.VISIBLE);
-        }
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+
+            }
+        });
+
+        registerForContextMenu(mListView);
+        updateListView();
     }
 
     @Override
@@ -72,9 +86,44 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        if (view.getId() == android.R.id.list) {
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            String title = getItemTitleForPosition(info.position);
+            menu.setHeaderTitle(title);
+            String[] menuItem = getResources().getStringArray(R.array.menu);
+            for (int i = 0; i < menuItem.length; i++) {
+                menu.add(Menu.NONE, i, i, menuItem[i]);
+            }
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        int menuItemIndex = item.getItemId();
+        String title =  getItemTitleForPosition(info.position);
+        switch (menuItemIndex) {
+            case MENU_RENAME_INDEX:
+                Toast.makeText(this, "Rename item " + title, Toast.LENGTH_SHORT).show();
+                break;
+            case MENU_DELETE_INDEX:
+                mDatabaseInterface.deleteVocabSet(title);
+                updateListView();
+                break;
+        }
+        return super.onContextItemSelected(item);
+    }
+
     @OnClick(android.R.id.empty)
     public void onClickedEmpty(View view) {
         showAddVocabSetDialog();
+    }
+
+    private String getItemTitleForPosition(int position) {
+        SQLiteCursor item = (SQLiteCursor) mListView.getItemAtPosition(position);
+        return item.getString(item.getColumnIndex(VocabSet.COLUMN_TITLE));
     }
 
     private void showAddVocabSetDialog() {
@@ -91,10 +140,21 @@ public class MainActivity extends AppCompatActivity {
         if (title == null || title.trim().isEmpty()) {
             Toast.makeText(this, "Vocabulary set title cannot be empty", Toast.LENGTH_LONG).show();
         } else {
+            try {
+                mDatabaseInterface.addVocabSet(title);
+                updateListView();
+            } catch (SQLiteConstraintException e) {
+                Toast.makeText(this, "Vocabulary set with title \'" + title + "\' already exists.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 
-            Long result = mDatabaseInterface.addVocabSet(title);
-            ((SimpleCursorAdapter) mListView.getAdapter()).getCursor().requery();
-//            Toast.makeText(this, "Creating Vocab set " + title + " with result " + result, Toast.LENGTH_SHORT).show();
+    private void updateListView() {
+        ((SimpleCursorAdapter) mListView.getAdapter()).swapCursor(mDatabaseInterface.getVocabSetCursor());
+        if (mListView.getCount() > 0) {
+            mEmptyView.setVisibility(View.GONE);
+        } else {
+            mEmptyView.setVisibility(View.VISIBLE);
         }
     }
 }

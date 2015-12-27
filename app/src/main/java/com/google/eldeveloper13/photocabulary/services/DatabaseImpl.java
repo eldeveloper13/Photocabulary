@@ -3,6 +3,7 @@ package com.google.eldeveloper13.photocabulary.services;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
@@ -19,7 +20,7 @@ public class DatabaseImpl extends SQLiteOpenHelper implements DatabaseInterface 
 
     private static final String CREATE_VOCAB_SET_STATEMENT = "CREATE TABLE " + VocabSet.TABLE_NAME + " (" +
             VocabSet._ID + " INTEGER PRIMARY KEY, " +
-            VocabSet.COLUMN_TITLE + " TEXT" +
+            VocabSet.COLUMN_TITLE + " TEXT NOT NULL UNIQUE " +
             " )";
     private static final String DROP_VOCAB_SET_STATEMENT = "DROP TABLE IF EXISTS " + VocabSet.TABLE_NAME;
 
@@ -48,6 +49,11 @@ public class DatabaseImpl extends SQLiteOpenHelper implements DatabaseInterface 
     public long addVocabSet(String title) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(VocabSet.COLUMN_TITLE, title);
-        return getWritableDatabase().insert(VocabSet.TABLE_NAME, null, contentValues);
+        return getWritableDatabase().insertOrThrow(VocabSet.TABLE_NAME, null, contentValues);
+    }
+
+    @Override
+    public int deleteVocabSet(String title) {
+        return getWritableDatabase().delete(VocabSet.TABLE_NAME, VocabSet.COLUMN_TITLE + " = ?" , new String[] { title } );
     }
 }
