@@ -2,7 +2,7 @@ package com.google.eldeveloper13.photocabulary;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.database.Cursor;
+import android.content.Intent;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteCursor;
 import android.support.v7.app.AppCompatActivity;
@@ -20,8 +20,8 @@ import android.widget.Toast;
 
 import com.google.eldeveloper13.photocabulary.dialogs.DialogHelper;
 import com.google.eldeveloper13.photocabulary.factory.DatabaseFactory;
-import com.google.eldeveloper13.photocabulary.models.VocabSet;
-import com.google.eldeveloper13.photocabulary.services.DatabaseInterface;
+import com.google.eldeveloper13.photocabulary.database.VocabSetColumns;
+import com.google.eldeveloper13.photocabulary.database.DatabaseInterface;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -49,13 +49,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupListView() {
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.vocab_set_row, mDatabaseInterface.getVocabSetCursor(), new String[] {VocabSet.COLUMN_TITLE}, new int[] { R.id.vocab_set_title }, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.vocab_set_row, mDatabaseInterface.getVocabSetCursor(), new String[] {VocabSetColumns.COLUMN_TITLE}, new int[] { R.id.vocab_set_title }, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mListView.setAdapter(adapter);
 
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-
+                Intent intent = VocabularyListActivity.startVocabularyListActivity(MainActivity.this, getItemIdForPosition(position));
+                MainActivity.this.startActivity(intent);
             }
         });
 
@@ -123,7 +124,12 @@ public class MainActivity extends AppCompatActivity {
 
     private String getItemTitleForPosition(int position) {
         SQLiteCursor item = (SQLiteCursor) mListView.getItemAtPosition(position);
-        return item.getString(item.getColumnIndex(VocabSet.COLUMN_TITLE));
+        return item.getString(item.getColumnIndex(VocabSetColumns.COLUMN_TITLE));
+    }
+
+    private int getItemIdForPosition(int position) {
+        SQLiteCursor item = (SQLiteCursor) mListView.getItemAtPosition(position);
+        return item.getInt(item.getColumnIndex(VocabSetColumns._ID));
     }
 
     private void showAddVocabSetDialog() {

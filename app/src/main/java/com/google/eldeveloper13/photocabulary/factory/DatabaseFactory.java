@@ -2,8 +2,8 @@ package com.google.eldeveloper13.photocabulary.factory;
 
 import android.content.Context;
 
-import com.google.eldeveloper13.photocabulary.services.DatabaseImpl;
-import com.google.eldeveloper13.photocabulary.services.DatabaseInterface;
+import com.google.eldeveloper13.photocabulary.database.DatabaseImpl;
+import com.google.eldeveloper13.photocabulary.database.DatabaseInterface;
 
 /**
  * Created by Eric on 26/12/2015.

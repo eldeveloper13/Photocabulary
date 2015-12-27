@@ -1,16 +1,32 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="com.google.eldeveloper13.photocabulary.VocabularyListActivity">
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context="com.google.eldeveloper13.photocabulary.VocabularyListActivity">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/vocab_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="vertical">
+    android:id="@+id/vocab_list"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
 
     </android.support.v7.widget.RecyclerView>
+
+
+    <!--<FrameLayout-->
+        <!--android:id="@android:id/empty"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:paddingBottom="@dimen/activity_vertical_margin"-->
+        <!--android:paddingLeft="@dimen/activity_horizontal_margin"-->
+        <!--android:paddingRight="@dimen/activity_horizontal_margin"-->
+        <!--android:paddingTop="@dimen/activity_vertical_margin">-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:singleLine="false"-->
+            <!--android:text="@string/empty_vocab_set_help"-->
+            <!--android:textSize="@dimen/abc_text_size_title_material"/>-->
+    <!--</FrameLayout>-->
 </FrameLayout>
