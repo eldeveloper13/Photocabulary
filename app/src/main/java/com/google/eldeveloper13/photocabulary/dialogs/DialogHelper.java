@@ -19,6 +19,14 @@ public class DialogHelper {
         return dialog;
     }
 
+    public static AlertDialog createOpenImageViewDialog(Context context, DialogInterface.OnClickListener listener) {
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle("Get Image from")
+                .setItems(R.array.open_image_options, listener)
+                .create();
+        return dialog;
+    }
+
     static class DismissOnClickListener implements DialogInterface.OnClickListener {
         @Override
         public void onClick(DialogInterface dialogInterface, int which) {

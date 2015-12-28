@@ -4,4 +4,9 @@
         <item>Rename</item>
         <item>Delete</item>
     </string-array>
+    <string-array name="open_image_options">
+        <item>Open from Gallery</item>
+        <item>Take a Photo</item>
+        <item>Clear Image</item>
+    </string-array>
 </resources>
