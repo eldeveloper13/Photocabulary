@@ -67,7 +67,13 @@ public class DatabaseImpl extends SQLiteOpenHelper implements DatabaseInterface 
 
     @Override
     public int deleteVocabSet(String title) {
-        return getWritableDatabase().delete(VocabSetColumns.TABLE_NAME, VocabSetColumns.COLUMN_TITLE + " = ?" , new String[] { title } );
+        return getWritableDatabase().delete(VocabSetColumns.TABLE_NAME, VocabSetColumns.COLUMN_TITLE + " = ?", new String[]{title});
+    }
+
+    @Override
+    public int deleteVocabSet(int setId) {
+        getWritableDatabase().delete(VocabColumns.TABLE_NAME, VocabColumns.COLUMN_VOCAB_SET_ID + " = ?", new String[] { Integer.toString(setId) } );
+        return getWritableDatabase().delete(VocabSetColumns.TABLE_NAME, VocabSetColumns._ID + " = ?" , new String[] { Integer.toString(setId) } );
     }
 
     @Override

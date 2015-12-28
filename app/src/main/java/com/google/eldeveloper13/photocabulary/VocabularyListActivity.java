@@ -1,5 +1,6 @@
 package com.google.eldeveloper13.photocabulary;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -25,6 +26,7 @@ import butterknife.ButterKnife;
 
 public class VocabularyListActivity extends AppCompatActivity {
 
+
     public static String EXTRA_VOCAB_SET_ID = "EXTRA_VOCAB_SET_ID";
 
     public static Intent startVocabularyListActivity(Context context, int id) {
@@ -32,6 +34,8 @@ public class VocabularyListActivity extends AppCompatActivity {
         intent.putExtra(EXTRA_VOCAB_SET_ID, id);
         return intent;
     }
+
+    private static final int REQUEST_CREATE_VOCAB = 1000;
 
     @Bind(R.id.vocab_list)
     RecyclerView mVocabListView;
@@ -54,10 +58,14 @@ public class VocabularyListActivity extends AppCompatActivity {
         mDatabaseInterface = DatabaseFactory.makeDatabase(this);
 
         List<Vocab> list = new ArrayList<>();
+        VocabListAdapter adapter = new VocabListAdapter(list);
+        mVocabListView.setAdapter(adapter);
+        updateListView();
+    }
+
+    private void updateListView() {
+        List<Vocab> list = new ArrayList<>();
         Cursor cursor = mDatabaseInterface. getVocabListCursor(mVocabSetId);
-        for (int i = 0; i < 30; i++) {
-            mDatabaseInterface.addVocab("i = " + i, null, mVocabSetId);
-        }
 
         if (cursor.moveToFirst()) {
             do {
@@ -67,8 +75,7 @@ public class VocabularyListActivity extends AppCompatActivity {
             } while (cursor.moveToNext());
         }
 
-        VocabListAdapter adapter = new VocabListAdapter(list);
-        mVocabListView.setAdapter(adapter);
+        ((VocabListAdapter) mVocabListView.getAdapter()).updateList(list);
     }
 
     @Override
@@ -86,10 +93,26 @@ public class VocabularyListActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_add_vocab) {
+            addVocab();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_CREATE_VOCAB) {
+                updateListView();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void addVocab() {
+        Intent intent = EditActivity.startEditActivity(this, mVocabSetId);
+        this.startActivityForResult(intent, REQUEST_CREATE_VOCAB);
     }
 }

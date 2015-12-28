@@ -1,16 +1,45 @@
 package com.google.eldeveloper13.photocabulary;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
+
+import com.google.eldeveloper13.photocabulary.database.DatabaseInterface;
+import com.google.eldeveloper13.photocabulary.factory.DatabaseFactory;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class EditActivity extends AppCompatActivity {
+
+    private static final String EXTRA_VOCAB_SET_ID = "EXTRA_VOCAB_SET_ID";
+
+    public static Intent startEditActivity(Context context, int vocabSetId) {
+        Intent intent = new Intent(context, EditActivity.class);
+        intent.putExtra(EXTRA_VOCAB_SET_ID, vocabSetId);
+        return intent;
+    }
+
+    @Bind(R.id.vocab_text)
+    EditText mVocabEditText;
+
+    int mVocabSetId;
+    DatabaseInterface mDatabaseInterface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mVocabSetId = getIntent().getIntExtra(EXTRA_VOCAB_SET_ID, -1);
         setContentView(R.layout.activity_edit);
+        ButterKnife.bind(this);
+
+        mDatabaseInterface = DatabaseFactory.makeDatabase(this);
     }
 
     @Override
@@ -33,5 +62,16 @@ public class EditActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @OnClick(R.id.save_button)
+    public void onSaveButtonClicked(View view) {
+        saveVocab();
+    }
+
+    private void saveVocab() {
+        mDatabaseInterface.addVocab(mVocabEditText.getText().toString().trim(), null, mVocabSetId);
+        setResult(RESULT_OK);
+        finish();
     }
 }

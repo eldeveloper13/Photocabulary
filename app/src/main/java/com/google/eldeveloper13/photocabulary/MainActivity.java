@@ -105,12 +105,13 @@ public class MainActivity extends AppCompatActivity {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         int menuItemIndex = item.getItemId();
         String title =  getItemTitleForPosition(info.position);
+        int id = getItemIdForPosition(info.position);
         switch (menuItemIndex) {
             case MENU_RENAME_INDEX:
                 Toast.makeText(this, "Rename item " + title, Toast.LENGTH_SHORT).show();
                 break;
             case MENU_DELETE_INDEX:
-                mDatabaseInterface.deleteVocabSet(title);
+                mDatabaseInterface.deleteVocabSet(id);
                 updateListView();
                 break;
         }

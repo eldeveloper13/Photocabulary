@@ -44,6 +44,12 @@ public class VocabListAdapter extends RecyclerView.Adapter<VocabListAdapter.Voca
         holder.mTextView.setText(mList.get(position).getTitle());
     }
 
+    public void updateList(List<Vocab> list) {
+        mList.clear();
+        mList.addAll(list);
+        notifyDataSetChanged();
+    }
+
     public static class VocabListViewHolder extends RecyclerView.ViewHolder {
 
         @Bind(R.id.textView)
