@@ -1,10 +1,14 @@
 package com.google.eldeveloper13.photocabulary;
 
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,16 +18,23 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.eldeveloper13.photocabulary.database.DatabaseInterface;
 import com.google.eldeveloper13.photocabulary.dialogs.DialogHelper;
 import com.google.eldeveloper13.photocabulary.factory.DatabaseFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class EditActivity extends AppCompatActivity {
+
+    private Uri mImageUri;
 
     public static Intent startEditActivity(Context context, int vocabSetId) {
         Intent intent = new Intent(context, EditActivity.class);
@@ -77,10 +88,27 @@ public class EditActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap bitmap = (Bitmap) extras.get("data");
-            mVocabImageView.setImageBitmap(bitmap);
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+            if (resultCode == RESULT_OK) {
+                try {
+                    getContentResolver().notifyChange(mImageUri, null);
+                    ContentResolver contentResolver = getContentResolver();
+                    Bitmap bitmap = android.provider.MediaStore.Images.Media.getBitmap(contentResolver, mImageUri);
+                    mVocabImageView.setImageBitmap(bitmap);
+                } catch (IOException e) {
+
+                }
+            }
+        } else if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                mVocabImageView.setImageBitmap(bitmap);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
@@ -103,7 +131,11 @@ public class EditActivity extends AppCompatActivity {
                 if (which == 0) {
                     openGallery();
                 } else if (which == 1) {
-                    openCamera();
+                    try {
+                        openCamera();
+                    } catch (IOException e) {
+                        Toast.makeText(EditActivity.this, "Cannot Open Camera : " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
                 } else if (which == 2) {
                     clearImage();
                 }
@@ -120,11 +152,25 @@ public class EditActivity extends AppCompatActivity {
         }
     }
 
-    private void openCamera() {
+    private void openCamera() throws IOException {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File file = getCacheImagePath();
+        mImageUri = Uri.fromFile(file);
+        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
+    }
+
+    private File getCacheImagePath() throws IOException {
+        File file = null;
+        try {
+            file = File.createTempFile("tempFile", ".jpg", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
+            file.delete();
+        } catch (Exception e) {
+
+        }
+        return file;
     }
 
     private void clearImage() {
