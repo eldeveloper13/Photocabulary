@@ -4,16 +4,19 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.google.eldeveloper13.photocabulary.adaptors.VocabListAdapter;
 import com.google.eldeveloper13.photocabulary.database.VocabColumns;
-import com.google.eldeveloper13.photocabulary.database.VocabSetColumns;
 import com.google.eldeveloper13.photocabulary.factory.DatabaseFactory;
 import com.google.eldeveloper13.photocabulary.models.Vocab;
 import com.google.eldeveloper13.photocabulary.database.DatabaseInterface;
@@ -27,6 +30,7 @@ import butterknife.ButterKnife;
 public class VocabularyListActivity extends AppCompatActivity {
 
 
+    private static final String TAG = VocabularyListActivity.class.getName();
     public static String EXTRA_VOCAB_SET_ID = "EXTRA_VOCAB_SET_ID";
 
     public static Intent startVocabularyListActivity(Context context, int id) {
@@ -60,22 +64,42 @@ public class VocabularyListActivity extends AppCompatActivity {
         List<Vocab> list = new ArrayList<>();
         VocabListAdapter adapter = new VocabListAdapter(list);
         mVocabListView.setAdapter(adapter);
+        adapter.setItemClickListener(new VocabListAdapter.ItemClickListener() {
+            @Override
+            public void onItemClicked(View view, int position) {
+                Vocab vocab = ((VocabListAdapter)mVocabListView.getAdapter()).getItem(position);
+                Intent intent = EditActivity.startEditActivityWithId(VocabularyListActivity.this, vocab.getId());
+                startActivity(intent);
+            }
+        });
         updateListView();
     }
 
     private void updateListView() {
         List<Vocab> list = new ArrayList<>();
-        Cursor cursor = mDatabaseInterface. getVocabListCursor(mVocabSetId);
-
-        if (cursor.moveToFirst()) {
-            do {
-                String title = cursor.getString(cursor.getColumnIndex(VocabColumns.COLUMN_WORD));
-                Vocab vocab = new Vocab(title);
-                list.add(vocab);
-            } while (cursor.moveToNext());
+        Cursor cursor = mDatabaseInterface.getVocabListCursor(mVocabSetId);
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    long id = cursor.getLong(cursor.getColumnIndex(VocabColumns._ID));
+                    String title = cursor.getString(cursor.getColumnIndex(VocabColumns.COLUMN_WORD));
+                    String imagePath= cursor.getString(cursor.getColumnIndex(VocabColumns.COLUMN_IMAGE_PATH));
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                    Bitmap image = BitmapFactory.decodeFile(imagePath, options);
+                    int vocabSetId = cursor.getInt(cursor.getColumnIndex(VocabColumns.COLUMN_VOCAB_SET_ID));
+                    Vocab vocab = new Vocab(id, title, image, vocabSetId);
+                    list.add(vocab);
+                } while (cursor.moveToNext());
+            }
+            ((VocabListAdapter) mVocabListView.getAdapter()).updateList(list);
+        } catch (Exception e) {
+            Log.e(TAG, "Update List exception : " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
-
-        ((VocabListAdapter) mVocabListView.getAdapter()).updateList(list);
     }
 
     @Override

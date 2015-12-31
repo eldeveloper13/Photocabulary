@@ -9,8 +9,6 @@ import android.widget.TextView;
 import com.google.eldeveloper13.photocabulary.R;
 import com.google.eldeveloper13.photocabulary.models.Vocab;
 
-import org.w3c.dom.Text;
-
 import java.util.List;
 
 import butterknife.Bind;
@@ -22,6 +20,7 @@ import butterknife.ButterKnife;
 public class VocabListAdapter extends RecyclerView.Adapter<VocabListAdapter.VocabListViewHolder> {
 
     private List<Vocab> mList;
+    private ItemClickListener mItemClickListener;
 
     public VocabListAdapter(List<Vocab> list) {
         mList = list;
@@ -41,7 +40,19 @@ public class VocabListAdapter extends RecyclerView.Adapter<VocabListAdapter.Voca
 
     @Override
     public void onBindViewHolder(VocabListViewHolder holder, int position) {
-        holder.mTextView.setText(mList.get(position).getTitle());
+        holder.mTextView.setText(mList.get(position).getWord());
+    }
+
+    public Vocab getItem(int position) {
+        return mList.get(position);
+    }
+
+    public ItemClickListener getItemClickListener() {
+        return mItemClickListener;
+    }
+
+    public void setItemClickListener(ItemClickListener itemClickListener) {
+        mItemClickListener = itemClickListener;
     }
 
     public void updateList(List<Vocab> list) {
@@ -50,7 +61,7 @@ public class VocabListAdapter extends RecyclerView.Adapter<VocabListAdapter.Voca
         notifyDataSetChanged();
     }
 
-    public static class VocabListViewHolder extends RecyclerView.ViewHolder {
+    public class VocabListViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         @Bind(R.id.textView)
         TextView mTextView;
@@ -58,6 +69,19 @@ public class VocabListAdapter extends RecyclerView.Adapter<VocabListAdapter.Voca
         public VocabListViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+            itemView.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View view) {
+            if (mItemClickListener != null) {
+                mItemClickListener.onItemClicked(view, getAdapterPosition());
+            }
+        }
+    }
+
+    public interface ItemClickListener {
+
+        void onItemClicked(View view, int position);
     }
 }

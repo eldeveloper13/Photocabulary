@@ -23,6 +23,7 @@ import android.widget.Toast;
 import com.google.eldeveloper13.photocabulary.database.DatabaseInterface;
 import com.google.eldeveloper13.photocabulary.dialogs.DialogHelper;
 import com.google.eldeveloper13.photocabulary.factory.DatabaseFactory;
+import com.google.eldeveloper13.photocabulary.models.Vocab;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -42,7 +43,15 @@ public class EditActivity extends AppCompatActivity {
         return intent;
     }
 
+    public static Intent startEditActivityWithId(Context context, long vocabId) {
+        Intent intent = new Intent(context, EditActivity.class);
+        intent.putExtra(EXTRA_VOCAB_ID, vocabId);
+        return intent;
+    }
+
     private static final String EXTRA_VOCAB_SET_ID = "EXTRA_VOCAB_SET_ID";
+    private static final String EXTRA_VOCAB_ID = "EXTRA_VOCAB_ID";
+
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_IMAGE_GALLERY = 2;
 
@@ -53,15 +62,29 @@ public class EditActivity extends AppCompatActivity {
 
     int mVocabSetId;
     DatabaseInterface mDatabaseInterface;
+    Bitmap mVocabImage;
+    String mVocabImagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mVocabSetId = getIntent().getIntExtra(EXTRA_VOCAB_SET_ID, -1);
         setContentView(R.layout.activity_edit);
         ButterKnife.bind(this);
-
         mDatabaseInterface = DatabaseFactory.makeDatabase(this);
+
+        if (getIntent().hasExtra(EXTRA_VOCAB_SET_ID)) {
+            mVocabSetId = getIntent().getIntExtra(EXTRA_VOCAB_SET_ID, -1);
+        } else if (getIntent().hasExtra(EXTRA_VOCAB_ID)) {
+            Vocab vocab = mDatabaseInterface.getVocab(getIntent().getLongExtra(EXTRA_VOCAB_ID, -1L));
+            if (vocab != null) {
+                mVocabSetId = vocab.getVocabSetId();
+                mVocabImage = vocab.getImage();
+                mVocabImageView.setImageBitmap(mVocabImage);
+                mVocabEditText.setText(vocab.getWord());
+            }
+        }
+
+
     }
 
     @Override
@@ -93,8 +116,8 @@ public class EditActivity extends AppCompatActivity {
                 try {
                     getContentResolver().notifyChange(mImageUri, null);
                     ContentResolver contentResolver = getContentResolver();
-                    Bitmap bitmap = android.provider.MediaStore.Images.Media.getBitmap(contentResolver, mImageUri);
-                    mVocabImageView.setImageBitmap(bitmap);
+                    mVocabImage = android.provider.MediaStore.Images.Media.getBitmap(contentResolver, mImageUri);
+                    mVocabImageView.setImageBitmap(mVocabImage);
                 } catch (IOException e) {
 
                 }
@@ -102,8 +125,8 @@ public class EditActivity extends AppCompatActivity {
         } else if (requestCode == REQUEST_IMAGE_GALLERY && resultCode == RESULT_OK) {
             Uri uri = data.getData();
             try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                mVocabImageView.setImageBitmap(bitmap);
+                mVocabImage = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                mVocabImageView.setImageBitmap(mVocabImage);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -145,9 +168,9 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void openGallery() {
-        Intent galleryIntent=new Intent(Intent.ACTION_GET_CONTENT);
+        Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
         galleryIntent.setType("image/*");
-        if(galleryIntent.resolveActivity(getPackageManager()) != null) {
+        if (galleryIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(galleryIntent, REQUEST_IMAGE_GALLERY);
         }
     }
@@ -166,7 +189,7 @@ public class EditActivity extends AppCompatActivity {
         File file = null;
         try {
             file = File.createTempFile("tempFile", ".jpg", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES));
-            file.delete();
+            mVocabImagePath = file.getAbsolutePath();
         } catch (Exception e) {
 
         }
@@ -178,8 +201,13 @@ public class EditActivity extends AppCompatActivity {
     }
 
     private void saveVocab() {
-        mDatabaseInterface.addVocab(mVocabEditText.getText().toString().trim(), null, mVocabSetId);
-        setResult(RESULT_OK);
+        String vocab = mVocabEditText.getText().toString().trim();
+        if (vocab != null && !vocab.isEmpty()) {
+            mDatabaseInterface.addVocab(vocab, mVocabImagePath, mVocabSetId);
+            setResult(RESULT_OK);
+        } else {
+            setResult(RESULT_CANCELED);
+        }
         finish();
     }
 }

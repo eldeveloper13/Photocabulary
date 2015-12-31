@@ -2,6 +2,9 @@ package com.google.eldeveloper13.photocabulary.database;
 
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
+
+import com.google.eldeveloper13.photocabulary.models.Vocab;
 
 public interface DatabaseInterface {
 
@@ -11,6 +14,8 @@ public interface DatabaseInterface {
     int deleteVocabSet(int setId);
 
     Cursor getVocabListCursor(int vocabSetId);
-    long addVocab(String vocab, Bitmap image, int vocabSetId);
+    long addVocab(String vocab, String imagePath, int vocabSetId);
 
+    @Nullable
+    Vocab getVocab(long vocabId);
 }
